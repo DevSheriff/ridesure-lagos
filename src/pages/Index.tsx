@@ -6,28 +6,30 @@ import PinFilter from "@/components/PinFilter";
 import PinDetail from "@/components/PinDetail";
 import AddPinForm from "@/components/AddPinForm";
 import ThemeToggle from "@/components/ThemeToggle";
-import { INITIAL_PINS, MapPin, LagosLocation, CustomCategory } from "@/data/lagos";
+import { LagosLocation } from "@/data/lagos";
+import { usePins } from "@/hooks/usePins";
+import { useCustomCategories } from "@/hooks/useCustomCategories";
 import { toast } from "sonner";
 
 const UPVOTE_THRESHOLD = 3;
 
 const Index = () => {
-  const [pins, setPins] = useState<MapPin[]>(INITIAL_PINS);
-  const [selectedPin, setSelectedPin] = useState<MapPin | null>(null);
+  const { pins, loading, addPin, upvote, downvote } = usePins();
+  const { customCategories, addCustomCategory } = useCustomCategories();
+
+  const [selectedPin, setSelectedPin] = useState<typeof pins[0] | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [addPinCoords, setAddPinCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [centerOn, setCenterOn] = useState<[number, number] | undefined>();
-  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [isDark, setIsDark] = useState(() => !document.documentElement.classList.contains("light"));
 
-  // Listen for theme changes
   const handleThemeCheck = useCallback(() => {
     setIsDark(!document.documentElement.classList.contains("light"));
   }, []);
 
-  const handlePinClick = useCallback((pin: MapPin) => {
+  const handlePinClick = useCallback((pin: typeof pins[0]) => {
     setSelectedPin(pin);
     setShowAddForm(false);
   }, []);
@@ -41,57 +43,34 @@ const Index = () => {
   }, [showAddForm]);
 
   const handleToggleFilter = useCallback((categoryId: string) => {
-    setActiveFilters((prev) => {
-      if (prev.includes(categoryId)) {
-        return prev.filter((id) => id !== categoryId);
-      }
-      return [...prev, categoryId];
-    });
-  }, []);
-
-  const handleAddPin = useCallback(
-    (data: { category: string; title: string; description: string; reportedBy: string }) => {
-      if (!addPinCoords) return;
-      const newPin: MapPin = {
-        id: Date.now().toString(),
-        lat: addPinCoords.lat,
-        lng: addPinCoords.lng,
-        ...data,
-        reportedAt: new Date(),
-        upvotes: 0,
-        downvotes: 0,
-        active: true,
-        permanent: false,
-      };
-      setPins((prev) => [...prev, newPin]);
-      setShowAddForm(false);
-      setAddPinCoords(null);
-      toast.success("Pin dropped!", { description: `${data.title} has been added. It needs ${UPVOTE_THRESHOLD} 👍 to become permanent.` });
-    },
-    [addPinCoords]
-  );
-
-  const handleUpvote = useCallback((id: string) => {
-    setPins((prev) =>
-      prev.map((p) => {
-        if (p.id !== id) return p;
-        const newUpvotes = p.upvotes + 1;
-        const becamePermanent = !p.permanent && newUpvotes >= UPVOTE_THRESHOLD;
-        if (becamePermanent) {
-          toast.success("Pin is now permanent! 🎉", { description: `"${p.title}" reached ${UPVOTE_THRESHOLD} upvotes.` });
-        }
-        return {
-          ...p,
-          upvotes: newUpvotes,
-          permanent: p.permanent || newUpvotes >= UPVOTE_THRESHOLD,
-        };
-      })
+    setActiveFilters((prev) =>
+      prev.includes(categoryId) ? prev.filter((id) => id !== categoryId) : [...prev, categoryId]
     );
   }, []);
 
-  const handleDownvote = useCallback((id: string) => {
-    setPins((prev) => prev.map((p) => (p.id === id ? { ...p, downvotes: p.downvotes + 1 } : p)));
-  }, []);
+  const handleAddPin = useCallback(
+    async (data: { category: string; title: string; description: string; reportedBy: string }) => {
+      if (!addPinCoords) return;
+      const newPin = await addPin({ ...data, lat: addPinCoords.lat, lng: addPinCoords.lng });
+      if (newPin) {
+        setShowAddForm(false);
+        setAddPinCoords(null);
+        toast.success("Pin dropped!", { description: `${data.title} has been added. It needs ${UPVOTE_THRESHOLD} 👍 to become permanent.` });
+      }
+    },
+    [addPinCoords, addPin]
+  );
+
+  const handleUpvote = useCallback(async (id: string) => {
+    const result = await upvote(id);
+    if (result.becamePermanent && result.pin) {
+      toast.success("Pin is now permanent! 🎉", { description: `"${result.pin.title}" reached ${UPVOTE_THRESHOLD} upvotes.` });
+    }
+  }, [upvote]);
+
+  const handleDownvote = useCallback(async (id: string) => {
+    await downvote(id);
+  }, [downvote]);
 
   const handleLocationSelect = useCallback((location: LagosLocation) => {
     setCenterOn([location.lat, location.lng]);
@@ -105,22 +84,21 @@ const Index = () => {
     toast.info("Tap the map to drop a pin", { description: "Click anywhere on the map to set the pin location." });
   };
 
-  const handleAddCustomCategory = useCallback((cat: CustomCategory) => {
-    setCustomCategories((prev) => {
-      if (prev.find((c) => c.id === cat.id)) return prev;
-      return [...prev, cat];
-    });
+  const handleAddCustomCategory = useCallback(async (cat: Parameters<typeof addCustomCategory>[0]) => {
+    await addCustomCategory(cat);
     toast.success(`New category "${cat.label}" created!`);
-  }, []);
+  }, [addCustomCategory]);
+
+  // Keep selectedPin in sync with latest pin data (for upvote/downvote updates)
+  const currentSelectedPin = selectedPin ? pins.find((p) => p.id === selectedPin.id) || selectedPin : null;
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background" onClick={handleThemeCheck}>
-      {/* Map */}
       <RideSureMap
         pins={pins}
         onPinClick={handlePinClick}
         onMapClick={handleMapClick}
-        selectedPin={selectedPin}
+        selectedPin={currentSelectedPin}
         filterCategories={activeFilters}
         centerOn={centerOn}
         customCategories={customCategories}
@@ -130,20 +108,16 @@ const Index = () => {
       {/* Top Bar */}
       <div className="absolute top-0 left-0 right-0 z-10 p-4">
         <div className="flex items-center gap-3 max-w-2xl mx-auto">
-          {/* Logo */}
           <div className="glass-panel px-4 py-3 rounded-xl flex items-center gap-2 flex-shrink-0">
             <Navigation className="w-5 h-5 text-primary" />
             <span className="font-bold text-foreground text-sm tracking-tight">
               Ride<span className="text-primary">Sure</span>
             </span>
           </div>
-
           <SearchBar onLocationSelect={handleLocationSelect} />
-
           <ThemeToggle />
         </div>
 
-        {/* Filters */}
         {showFilters && (
           <div className="mt-3 max-w-2xl mx-auto animate-slide-up">
             <PinFilter activeFilters={activeFilters} onToggleFilter={handleToggleFilter} />
@@ -154,17 +128,15 @@ const Index = () => {
       {/* Bottom Controls */}
       <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
         <div className="max-w-sm mx-auto space-y-3">
-          {/* Pin Detail */}
-          {selectedPin && !showAddForm && (
+          {currentSelectedPin && !showAddForm && (
             <PinDetail
-              pin={selectedPin}
+              pin={currentSelectedPin}
               onClose={() => setSelectedPin(null)}
               onUpvote={handleUpvote}
               onDownvote={handleDownvote}
             />
           )}
 
-          {/* Add Pin Form */}
           {showAddForm && addPinCoords && (
             <AddPinForm
               lat={addPinCoords.lat}
@@ -179,7 +151,6 @@ const Index = () => {
             />
           )}
 
-          {/* Action Buttons */}
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -203,7 +174,9 @@ const Index = () => {
             </button>
 
             <div className="glass-panel px-3 py-3 rounded-xl">
-              <span className="text-xs text-muted-foreground font-mono">{pins.length} pins</span>
+              <span className="text-xs text-muted-foreground font-mono">
+                {loading ? "..." : `${pins.length} pins`}
+              </span>
             </div>
           </div>
         </div>
