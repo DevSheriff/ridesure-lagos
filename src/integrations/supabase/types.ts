@@ -14,7 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      custom_categories: {
+        Row: {
+          color: string
+          description: string
+          icon: string
+          id: string
+          label: string
+        }
+        Insert: {
+          color: string
+          description?: string
+          icon: string
+          id: string
+          label: string
+        }
+        Update: {
+          color?: string
+          description?: string
+          icon?: string
+          id?: string
+          label?: string
+        }
+        Relationships: []
+      }
+      pins: {
+        Row: {
+          active: boolean
+          category: string
+          description: string
+          downvotes: number
+          id: string
+          lat: number
+          lng: number
+          permanent: boolean
+          reported_at: string
+          reported_by: string
+          title: string
+          upvotes: number
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          description?: string
+          downvotes?: number
+          id?: string
+          lat: number
+          lng: number
+          permanent?: boolean
+          reported_at?: string
+          reported_by?: string
+          title: string
+          upvotes?: number
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          description?: string
+          downvotes?: number
+          id?: string
+          lat?: number
+          lng?: number
+          permanent?: boolean
+          reported_at?: string
+          reported_by?: string
+          title?: string
+          upvotes?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
