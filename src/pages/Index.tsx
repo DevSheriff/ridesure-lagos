@@ -5,8 +5,11 @@ import SearchBar from "@/components/SearchBar";
 import PinFilter from "@/components/PinFilter";
 import PinDetail from "@/components/PinDetail";
 import AddPinForm from "@/components/AddPinForm";
-import { INITIAL_PINS, MapPin, LagosLocation } from "@/data/lagos";
+import ThemeToggle from "@/components/ThemeToggle";
+import { INITIAL_PINS, MapPin, LagosLocation, CustomCategory } from "@/data/lagos";
 import { toast } from "sonner";
+
+const UPVOTE_THRESHOLD = 3;
 
 const Index = () => {
   const [pins, setPins] = useState<MapPin[]>(INITIAL_PINS);
@@ -16,6 +19,13 @@ const Index = () => {
   const [addPinCoords, setAddPinCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [centerOn, setCenterOn] = useState<[number, number] | undefined>();
+  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
+  const [isDark, setIsDark] = useState(() => !document.documentElement.classList.contains("light"));
+
+  // Listen for theme changes
+  const handleThemeCheck = useCallback(() => {
+    setIsDark(!document.documentElement.classList.contains("light"));
+  }, []);
 
   const handlePinClick = useCallback((pin: MapPin) => {
     setSelectedPin(pin);
@@ -51,17 +61,32 @@ const Index = () => {
         upvotes: 0,
         downvotes: 0,
         active: true,
+        permanent: false,
       };
       setPins((prev) => [...prev, newPin]);
       setShowAddForm(false);
       setAddPinCoords(null);
-      toast.success("Pin dropped!", { description: `${data.title} has been added to the map.` });
+      toast.success("Pin dropped!", { description: `${data.title} has been added. It needs ${UPVOTE_THRESHOLD} 👍 to become permanent.` });
     },
     [addPinCoords]
   );
 
   const handleUpvote = useCallback((id: string) => {
-    setPins((prev) => prev.map((p) => (p.id === id ? { ...p, upvotes: p.upvotes + 1 } : p)));
+    setPins((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const newUpvotes = p.upvotes + 1;
+        const becamePermanent = !p.permanent && newUpvotes >= UPVOTE_THRESHOLD;
+        if (becamePermanent) {
+          toast.success("Pin is now permanent! 🎉", { description: `"${p.title}" reached ${UPVOTE_THRESHOLD} upvotes.` });
+        }
+        return {
+          ...p,
+          upvotes: newUpvotes,
+          permanent: p.permanent || newUpvotes >= UPVOTE_THRESHOLD,
+        };
+      })
+    );
   }, []);
 
   const handleDownvote = useCallback((id: string) => {
@@ -80,8 +105,16 @@ const Index = () => {
     toast.info("Tap the map to drop a pin", { description: "Click anywhere on the map to set the pin location." });
   };
 
+  const handleAddCustomCategory = useCallback((cat: CustomCategory) => {
+    setCustomCategories((prev) => {
+      if (prev.find((c) => c.id === cat.id)) return prev;
+      return [...prev, cat];
+    });
+    toast.success(`New category "${cat.label}" created!`);
+  }, []);
+
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-background">
+    <div className="relative w-full h-screen overflow-hidden bg-background" onClick={handleThemeCheck}>
       {/* Map */}
       <RideSureMap
         pins={pins}
@@ -90,6 +123,8 @@ const Index = () => {
         selectedPin={selectedPin}
         filterCategories={activeFilters}
         centerOn={centerOn}
+        customCategories={customCategories}
+        isDark={isDark}
       />
 
       {/* Top Bar */}
@@ -104,6 +139,8 @@ const Index = () => {
           </div>
 
           <SearchBar onLocationSelect={handleLocationSelect} />
+
+          <ThemeToggle />
         </div>
 
         {/* Filters */}
@@ -137,6 +174,8 @@ const Index = () => {
                 setShowAddForm(false);
                 setAddPinCoords(null);
               }}
+              customCategories={customCategories}
+              onAddCustomCategory={handleAddCustomCategory}
             />
           )}
 

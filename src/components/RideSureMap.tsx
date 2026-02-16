@@ -2,7 +2,7 @@
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { LAGOS_CENTER, DEFAULT_ZOOM, PIN_CATEGORIES, MapPin } from "@/data/lagos";
+import { LAGOS_CENTER, DEFAULT_ZOOM, PIN_CATEGORIES, MapPin, CustomCategory } from "@/data/lagos";
 import { useEffect } from "react";
 
 interface RideSureMapProps {
@@ -12,10 +12,12 @@ interface RideSureMapProps {
   selectedPin: MapPin | null;
   filterCategories: string[];
   centerOn?: [number, number];
+  customCategories: CustomCategory[];
+  isDark: boolean;
 }
 
-function createPinIcon(category: string) {
-  const cat = PIN_CATEGORIES.find((c) => c.id === category);
+function createPinIcon(category: string, allCategories: (typeof PIN_CATEGORIES[0])[]) {
+  const cat = allCategories.find((c) => c.id === category);
   if (!cat) return L.divIcon({ className: "custom-pin-icon", html: "📍", iconSize: [32, 32], iconAnchor: [16, 16] });
 
   return L.divIcon({
@@ -55,10 +57,15 @@ function CenterHandler({ centerOn }: { centerOn?: [number, number] }) {
   return null;
 }
 
-const RideSureMap = ({ pins, onPinClick, onMapClick, selectedPin, filterCategories, centerOn }: RideSureMapProps) => {
+const RideSureMap = ({ pins, onPinClick, onMapClick, selectedPin, filterCategories, centerOn, customCategories, isDark }: RideSureMapProps) => {
+  const allCategories = [...PIN_CATEGORIES, ...customCategories];
   const filteredPins = pins.filter(
     (pin) => pin.active && (filterCategories.length === 0 || filterCategories.includes(pin.category))
   );
+
+  const tileUrl = isDark
+    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 
   return (
     <MapContainer
@@ -69,7 +76,7 @@ const RideSureMap = ({ pins, onPinClick, onMapClick, selectedPin, filterCategori
     >
       <TileLayer
         attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        url={tileUrl}
       />
       <MapClickHandler onMapClick={onMapClick} />
       <CenterHandler centerOn={centerOn} />
@@ -77,7 +84,7 @@ const RideSureMap = ({ pins, onPinClick, onMapClick, selectedPin, filterCategori
         <Marker
           key={pin.id}
           position={[pin.lat, pin.lng]}
-          icon={createPinIcon(pin.category)}
+          icon={createPinIcon(pin.category, allCategories)}
           eventHandlers={{ click: () => onPinClick(pin) }}
         >
           <Popup>

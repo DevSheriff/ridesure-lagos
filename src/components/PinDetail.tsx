@@ -1,4 +1,4 @@
-import { X, ThumbsUp, ThumbsDown, Clock, User } from "lucide-react";
+import { X, ThumbsUp, ThumbsDown, Clock, User, Shield } from "lucide-react";
 import { MapPin, PIN_CATEGORIES } from "@/data/lagos";
 import { formatDistanceToNow } from "date-fns";
 
@@ -23,7 +23,15 @@ const PinDetail = ({ pin, onClose, onUpvote, onDownvote }: PinDetailProps) => {
             {category?.icon}
           </span>
           <div>
-            <span className="text-xs font-medium text-muted-foreground">{category?.label}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">{category?.label}</span>
+              {pin.permanent && (
+                <span className="flex items-center gap-0.5 text-[10px] font-semibold text-secondary bg-secondary/20 px-1.5 py-0.5 rounded-full">
+                  <Shield className="w-2.5 h-2.5" />
+                  Permanent
+                </span>
+              )}
+            </div>
             <h3 className="text-sm font-semibold text-foreground leading-tight">{pin.title}</h3>
           </div>
         </div>
@@ -60,9 +68,16 @@ const PinDetail = ({ pin, onClose, onUpvote, onDownvote }: PinDetailProps) => {
           <ThumbsDown className="w-3.5 h-3.5" />
           <span>{pin.downvotes}</span>
         </button>
-        <div className="ml-auto text-mono text-xs text-muted-foreground">
-          {pin.lat.toFixed(4)}, {pin.lng.toFixed(4)}
-        </div>
+        {!pin.permanent && (
+          <span className="ml-auto text-[10px] text-muted-foreground">
+            {Math.max(0, 3 - pin.upvotes)} more 👍 to permanent
+          </span>
+        )}
+        {pin.permanent && (
+          <div className="ml-auto text-mono text-xs text-muted-foreground">
+            {pin.lat.toFixed(4)}, {pin.lng.toFixed(4)}
+          </div>
+        )}
       </div>
     </div>
   );

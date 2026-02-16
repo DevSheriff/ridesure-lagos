@@ -19,4 +19,8 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime"],
   },
+  optimizeDeps: {
+    force: true,
+    include: ["react", "react-dom", "leaflet", "react-leaflet", "@react-leaflet/core"],
+  },
 }));

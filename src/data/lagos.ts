@@ -101,6 +101,15 @@ export interface MapPin {
   upvotes: number;
   downvotes: number;
   active: boolean;
+  permanent?: boolean;
+}
+
+export interface CustomCategory {
+  id: string;
+  label: string;
+  icon: string;
+  color: string;
+  description: string;
 }
 
 // Sample pins across Lagos

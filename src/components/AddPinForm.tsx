@@ -1,19 +1,40 @@
 import { useState } from "react";
-import { X, MapPin, Send } from "lucide-react";
-import { PIN_CATEGORIES } from "@/data/lagos";
+import { X, MapPin, Send, Plus } from "lucide-react";
+import { PIN_CATEGORIES, CustomCategory } from "@/data/lagos";
 
 interface AddPinFormProps {
   lat: number;
   lng: number;
   onSubmit: (data: { category: string; title: string; description: string; reportedBy: string }) => void;
   onCancel: () => void;
+  customCategories: CustomCategory[];
+  onAddCustomCategory: (cat: CustomCategory) => void;
 }
 
-const AddPinForm = ({ lat, lng, onSubmit, onCancel }: AddPinFormProps) => {
+const EMOJI_OPTIONS = ["🔴", "🟡", "🟢", "🔵", "🟣", "⚪", "🟠", "🛑", "⛔", "🚨", "🏗️", "🚦", "🏍️", "🛣️", "🌉", "🚛"];
+const COLOR_OPTIONS = [
+  "hsl(0, 70%, 55%)",
+  "hsl(30, 90%, 55%)",
+  "hsl(60, 80%, 50%)",
+  "hsl(120, 50%, 45%)",
+  "hsl(180, 60%, 45%)",
+  "hsl(210, 70%, 55%)",
+  "hsl(270, 55%, 55%)",
+  "hsl(330, 65%, 55%)",
+];
+
+const AddPinForm = ({ lat, lng, onSubmit, onCancel, customCategories, onAddCustomCategory }: AddPinFormProps) => {
   const [category, setCategory] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [reportedBy, setReportedBy] = useState("");
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [newCatLabel, setNewCatLabel] = useState("");
+  const [newCatIcon, setNewCatIcon] = useState("🔴");
+  const [newCatColor, setNewCatColor] = useState(COLOR_OPTIONS[0]);
+  const [newCatDesc, setNewCatDesc] = useState("");
+
+  const allCategories = [...PIN_CATEGORIES, ...customCategories];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,8 +42,25 @@ const AddPinForm = ({ lat, lng, onSubmit, onCancel }: AddPinFormProps) => {
     onSubmit({ category, title, description, reportedBy });
   };
 
+  const handleCreateCategory = () => {
+    if (!newCatLabel) return;
+    const id = newCatLabel.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+    const newCat: CustomCategory = {
+      id,
+      label: newCatLabel,
+      icon: newCatIcon,
+      color: newCatColor,
+      description: newCatDesc || `Custom: ${newCatLabel}`,
+    };
+    onAddCustomCategory(newCat);
+    setCategory(id);
+    setShowCreateCategory(false);
+    setNewCatLabel("");
+    setNewCatDesc("");
+  };
+
   return (
-    <div className="glass-panel rounded-2xl p-5 animate-slide-up w-full max-w-sm">
+    <div className="glass-panel rounded-2xl p-5 animate-slide-up w-full max-w-sm max-h-[70vh] overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-primary" />
@@ -41,7 +79,7 @@ const AddPinForm = ({ lat, lng, onSubmit, onCancel }: AddPinFormProps) => {
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Category</label>
           <div className="grid grid-cols-3 gap-1.5">
-            {PIN_CATEGORIES.map((cat) => (
+            {allCategories.map((cat) => (
               <button
                 type="button"
                 key={cat.id}
@@ -56,8 +94,81 @@ const AddPinForm = ({ lat, lng, onSubmit, onCancel }: AddPinFormProps) => {
                 <span className="text-[10px] leading-tight text-center">{cat.label}</span>
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setShowCreateCategory(!showCreateCategory)}
+              className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-all border ${
+                showCreateCategory
+                  ? "border-accent/40 bg-accent/10 text-foreground"
+                  : "border-dashed border-border text-muted-foreground hover:bg-muted/30"
+              }`}
+            >
+              <Plus className="w-4 h-4" />
+              <span className="text-[10px] leading-tight text-center">New Type</span>
+            </button>
           </div>
         </div>
+
+        {showCreateCategory && (
+          <div className="bg-muted/20 border border-border rounded-lg p-3 space-y-2">
+            <p className="text-xs font-medium text-foreground">Create New Category</p>
+            <input
+              type="text"
+              value={newCatLabel}
+              onChange={(e) => setNewCatLabel(e.target.value)}
+              placeholder="Category name"
+              className="w-full bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
+            />
+            <div>
+              <p className="text-[10px] text-muted-foreground mb-1">Pick an icon</p>
+              <div className="flex flex-wrap gap-1">
+                {EMOJI_OPTIONS.map((e) => (
+                  <button
+                    key={e}
+                    type="button"
+                    onClick={() => setNewCatIcon(e)}
+                    className={`w-7 h-7 rounded flex items-center justify-center text-sm transition-all ${
+                      newCatIcon === e ? "bg-primary/30 border border-primary/50" : "bg-muted/30 hover:bg-muted/50"
+                    }`}
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground mb-1">Pick a color</p>
+              <div className="flex gap-1.5">
+                {COLOR_OPTIONS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setNewCatColor(c)}
+                    className={`w-6 h-6 rounded-full transition-all ${
+                      newCatColor === c ? "ring-2 ring-foreground ring-offset-1 ring-offset-background" : ""
+                    }`}
+                    style={{ background: c }}
+                  />
+                ))}
+              </div>
+            </div>
+            <input
+              type="text"
+              value={newCatDesc}
+              onChange={(e) => setNewCatDesc(e.target.value)}
+              placeholder="Short description (optional)"
+              className="w-full bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
+            />
+            <button
+              type="button"
+              onClick={handleCreateCategory}
+              disabled={!newCatLabel}
+              className="w-full bg-accent text-accent-foreground py-1.5 rounded-lg text-xs font-semibold disabled:opacity-40"
+            >
+              Create "{newCatLabel || "..."}"
+            </button>
+          </div>
+        )}
 
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1 block">Title</label>
