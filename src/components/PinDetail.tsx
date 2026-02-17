@@ -1,16 +1,20 @@
 import { X, ThumbsUp, ThumbsDown, Clock, User, Shield } from "lucide-react";
-import { MapPin, PIN_CATEGORIES } from "@/data/lagos";
+import { MapPin, PIN_CATEGORIES, CustomCategory } from "@/data/lagos";
 import { formatDistanceToNow } from "date-fns";
+import { hasVoted } from "@/hooks/useVoteTracker";
 
 interface PinDetailProps {
   pin: MapPin;
   onClose: () => void;
   onUpvote: (id: string) => void;
   onDownvote: (id: string) => void;
+  customCategories: CustomCategory[];
 }
 
-const PinDetail = ({ pin, onClose, onUpvote, onDownvote }: PinDetailProps) => {
-  const category = PIN_CATEGORIES.find((c) => c.id === pin.category);
+const PinDetail = ({ pin, onClose, onUpvote, onDownvote, customCategories }: PinDetailProps) => {
+  const allCategories = [...PIN_CATEGORIES, ...customCategories];
+  const category = allCategories.find((c) => c.id === pin.category);
+  const voted = hasVoted(pin.id);
 
   return (
     <div className="glass-panel rounded-2xl p-5 animate-slide-up w-full max-w-sm">
@@ -56,19 +60,36 @@ const PinDetail = ({ pin, onClose, onUpvote, onDownvote }: PinDetailProps) => {
       <div className="flex items-center gap-3">
         <button
           onClick={() => onUpvote(pin.id)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/20 hover:bg-secondary/30 text-secondary transition-colors text-xs font-medium"
+          disabled={voted !== null}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            voted === "up"
+              ? "bg-secondary/30 text-secondary cursor-default"
+              : voted !== null
+              ? "bg-muted/30 text-muted-foreground cursor-not-allowed opacity-50"
+              : "bg-secondary/20 hover:bg-secondary/30 text-secondary"
+          }`}
         >
           <ThumbsUp className="w-3.5 h-3.5" />
           <span>{pin.upvotes}</span>
         </button>
         <button
           onClick={() => onDownvote(pin.id)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/20 hover:bg-destructive/30 text-destructive transition-colors text-xs font-medium"
+          disabled={voted !== null}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            voted === "down"
+              ? "bg-destructive/30 text-destructive cursor-default"
+              : voted !== null
+              ? "bg-muted/30 text-muted-foreground cursor-not-allowed opacity-50"
+              : "bg-destructive/20 hover:bg-destructive/30 text-destructive"
+          }`}
         >
           <ThumbsDown className="w-3.5 h-3.5" />
           <span>{pin.downvotes}</span>
         </button>
-        {!pin.permanent && (
+        {voted && (
+          <span className="text-[10px] text-muted-foreground italic">Already voted</span>
+        )}
+        {!voted && !pin.permanent && (
           <span className="ml-auto text-[10px] text-muted-foreground">
             {Math.max(0, 3 - pin.upvotes)} more 👍 to permanent
           </span>

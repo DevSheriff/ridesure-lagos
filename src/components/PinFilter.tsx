@@ -1,14 +1,17 @@
-import { PIN_CATEGORIES } from "@/data/lagos";
+import { PIN_CATEGORIES, CustomCategory } from "@/data/lagos";
 
 interface PinFilterProps {
   activeFilters: string[];
   onToggleFilter: (categoryId: string) => void;
+  customCategories: CustomCategory[];
 }
 
-const PinFilter = ({ activeFilters, onToggleFilter }: PinFilterProps) => {
+const PinFilter = ({ activeFilters, onToggleFilter, customCategories }: PinFilterProps) => {
+  const allCategories = [...PIN_CATEGORIES, ...customCategories];
+
   return (
     <div className="flex flex-wrap gap-2">
-      {PIN_CATEGORIES.map((cat) => {
+      {allCategories.map((cat) => {
         const isActive = activeFilters.length === 0 || activeFilters.includes(cat.id);
         return (
           <button

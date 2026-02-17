@@ -4,6 +4,23 @@ import { MapPin } from "@/data/lagos";
 
 const UPVOTE_THRESHOLD = 3;
 
+function rowToPin(row: any): MapPin {
+  return {
+    id: row.id,
+    lat: row.lat,
+    lng: row.lng,
+    category: row.category,
+    title: row.title,
+    description: row.description || "",
+    reportedBy: row.reported_by || "Anonymous",
+    reportedAt: new Date(row.reported_at),
+    upvotes: row.upvotes,
+    downvotes: row.downvotes,
+    active: row.active,
+    permanent: row.permanent,
+  };
+}
+
 export function usePins() {
   const [pins, setPins] = useState<MapPin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,22 +34,7 @@ export function usePins() {
         .order("reported_at", { ascending: false });
 
       if (!error && data) {
-        setPins(
-          data.map((row: any) => ({
-            id: row.id,
-            lat: row.lat,
-            lng: row.lng,
-            category: row.category,
-            title: row.title,
-            description: row.description || "",
-            reportedBy: row.reported_by || "Anonymous",
-            reportedAt: new Date(row.reported_at),
-            upvotes: row.upvotes,
-            downvotes: row.downvotes,
-            active: row.active,
-            permanent: row.permanent,
-          }))
-        );
+        setPins(data.map(rowToPin));
       }
       setLoading(false);
     };
@@ -40,8 +42,40 @@ export function usePins() {
     fetchPins();
   }, []);
 
+  // Realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel("pins-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "pins" },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const newPin = rowToPin(payload.new);
+            setPins((prev) => {
+              if (prev.find((p) => p.id === newPin.id)) return prev;
+              return [newPin, ...prev];
+            });
+          } else if (payload.eventType === "UPDATE") {
+            const updated = rowToPin(payload.new);
+            setPins((prev) =>
+              prev.map((p) => (p.id === updated.id ? updated : p))
+            );
+          } else if (payload.eventType === "DELETE") {
+            const oldId = (payload.old as any).id;
+            setPins((prev) => prev.filter((p) => p.id !== oldId));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const addPin = useCallback(
-    async (data: { category: string; title: string; description: string; reportedBy: string; lat: number; lng: number }) => {
+    async (data: { category: string; title: string; description: string; reportedBy: string; lat: number; lng: number; permanent?: boolean }) => {
       const { data: inserted, error } = await supabase
         .from("pins")
         .insert({
@@ -51,26 +85,18 @@ export function usePins() {
           title: data.title,
           description: data.description,
           reported_by: data.reportedBy,
+          permanent: data.permanent || false,
         })
         .select()
         .single();
 
       if (!error && inserted) {
-        const newPin: MapPin = {
-          id: inserted.id,
-          lat: inserted.lat,
-          lng: inserted.lng,
-          category: inserted.category,
-          title: inserted.title,
-          description: inserted.description || "",
-          reportedBy: inserted.reported_by || "Anonymous",
-          reportedAt: new Date(inserted.reported_at),
-          upvotes: inserted.upvotes,
-          downvotes: inserted.downvotes,
-          active: inserted.active,
-          permanent: inserted.permanent,
-        };
-        setPins((prev) => [newPin, ...prev]);
+        const newPin = rowToPin(inserted);
+        // Realtime will handle adding it, but add optimistically too
+        setPins((prev) => {
+          if (prev.find((p) => p.id === newPin.id)) return prev;
+          return [newPin, ...prev];
+        });
         return newPin;
       }
       return null;
