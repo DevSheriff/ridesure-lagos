@@ -9,6 +9,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { LagosLocation } from "@/data/lagos";
 import { usePins } from "@/hooks/usePins";
 import { useCustomCategories } from "@/hooks/useCustomCategories";
+import { hasVoted, recordVote } from "@/hooks/useVoteTracker";
 import { toast } from "sonner";
 
 const UPVOTE_THRESHOLD = 3;
@@ -49,19 +50,28 @@ const Index = () => {
   }, []);
 
   const handleAddPin = useCallback(
-    async (data: { category: string; title: string; description: string; reportedBy: string }) => {
+    async (data: { category: string; title: string; description: string; reportedBy: string; permanent: boolean }) => {
       if (!addPinCoords) return;
       const newPin = await addPin({ ...data, lat: addPinCoords.lat, lng: addPinCoords.lng });
       if (newPin) {
         setShowAddForm(false);
         setAddPinCoords(null);
-        toast.success("Pin dropped!", { description: `${data.title} has been added. It needs ${UPVOTE_THRESHOLD} 👍 to become permanent.` });
+        if (data.permanent) {
+          toast.success("Permanent pin dropped!", { description: `${data.title} has been added permanently.` });
+        } else {
+          toast.success("Pin dropped!", { description: `${data.title} has been added. It needs ${UPVOTE_THRESHOLD} 👍 in 24h to stay.` });
+        }
       }
     },
     [addPinCoords, addPin]
   );
 
   const handleUpvote = useCallback(async (id: string) => {
+    if (hasVoted(id)) {
+      toast.error("Already voted", { description: "You can only vote once per pin from this device." });
+      return;
+    }
+    recordVote(id, "up");
     const result = await upvote(id);
     if (result.becamePermanent && result.pin) {
       toast.success("Pin is now permanent! 🎉", { description: `"${result.pin.title}" reached ${UPVOTE_THRESHOLD} upvotes.` });
@@ -69,6 +79,11 @@ const Index = () => {
   }, [upvote]);
 
   const handleDownvote = useCallback(async (id: string) => {
+    if (hasVoted(id)) {
+      toast.error("Already voted", { description: "You can only vote once per pin from this device." });
+      return;
+    }
+    recordVote(id, "down");
     await downvote(id);
   }, [downvote]);
 
@@ -89,7 +104,6 @@ const Index = () => {
     toast.success(`New category "${cat.label}" created!`);
   }, [addCustomCategory]);
 
-  // Keep selectedPin in sync with latest pin data (for upvote/downvote updates)
   const currentSelectedPin = selectedPin ? pins.find((p) => p.id === selectedPin.id) || selectedPin : null;
 
   return (
@@ -120,7 +134,7 @@ const Index = () => {
 
         {showFilters && (
           <div className="mt-3 max-w-2xl mx-auto animate-slide-up">
-            <PinFilter activeFilters={activeFilters} onToggleFilter={handleToggleFilter} />
+            <PinFilter activeFilters={activeFilters} onToggleFilter={handleToggleFilter} customCategories={customCategories} />
           </div>
         )}
       </div>
@@ -134,6 +148,7 @@ const Index = () => {
               onClose={() => setSelectedPin(null)}
               onUpvote={handleUpvote}
               onDownvote={handleDownvote}
+              customCategories={customCategories}
             />
           )}
 

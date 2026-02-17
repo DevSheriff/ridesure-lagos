@@ -5,7 +5,7 @@ import { PIN_CATEGORIES, CustomCategory } from "@/data/lagos";
 interface AddPinFormProps {
   lat: number;
   lng: number;
-  onSubmit: (data: { category: string; title: string; description: string; reportedBy: string }) => void;
+  onSubmit: (data: { category: string; title: string; description: string; reportedBy: string; permanent: boolean }) => void;
   onCancel: () => void;
   customCategories: CustomCategory[];
   onAddCustomCategory: (cat: CustomCategory) => void;
@@ -28,6 +28,7 @@ const AddPinForm = ({ lat, lng, onSubmit, onCancel, customCategories, onAddCusto
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [reportedBy, setReportedBy] = useState("");
+  const [isPermanent, setIsPermanent] = useState(false);
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [newCatLabel, setNewCatLabel] = useState("");
   const [newCatIcon, setNewCatIcon] = useState("🔴");
@@ -39,7 +40,7 @@ const AddPinForm = ({ lat, lng, onSubmit, onCancel, customCategories, onAddCusto
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!category || !title || !reportedBy) return;
-    onSubmit({ category, title, description, reportedBy });
+    onSubmit({ category, title, description, reportedBy, permanent: isPermanent });
   };
 
   const handleCreateCategory = () => {
@@ -76,6 +77,7 @@ const AddPinForm = ({ lat, lng, onSubmit, onCancel, customCategories, onAddCusto
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-3">
+        {/* Category selector */}
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Category</label>
           <div className="grid grid-cols-3 gap-1.5">
@@ -169,6 +171,37 @@ const AddPinForm = ({ lat, lng, onSubmit, onCancel, customCategories, onAddCusto
             </button>
           </div>
         )}
+
+        {/* Duration toggle */}
+        <div>
+          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Duration</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setIsPermanent(false)}
+              className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                !isPermanent
+                  ? "bg-primary/20 border border-primary/40 text-foreground"
+                  : "bg-muted/30 border border-transparent text-muted-foreground hover:bg-muted/50"
+              }`}
+            >
+              ⏳ Temporary
+              <span className="block text-[10px] opacity-70 mt-0.5">Expires in 24h without upvotes</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPermanent(true)}
+              className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                isPermanent
+                  ? "bg-primary/20 border border-primary/40 text-foreground"
+                  : "bg-muted/30 border border-transparent text-muted-foreground hover:bg-muted/50"
+              }`}
+            >
+              🛡️ Permanent
+              <span className="block text-[10px] opacity-70 mt-0.5">Stays on the map forever</span>
+            </button>
+          </div>
+        </div>
 
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1 block">Title</label>
