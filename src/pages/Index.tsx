@@ -1,18 +1,23 @@
 import { useState, useCallback } from "react";
-import { Plus, Navigation, Layers } from "lucide-react";
+import { Plus, Navigation, Layers, CheckCircle } from "lucide-react";
 import RideSureMap from "@/components/RideSureMap";
 import SearchBar from "@/components/SearchBar";
 import PinFilter from "@/components/PinFilter";
 import PinDetail from "@/components/PinDetail";
 import AddPinForm from "@/components/AddPinForm";
 import ThemeToggle from "@/components/ThemeToggle";
+import TurnByTurn from "@/components/TurnByTurn";
+import DeliveryRatingModal from "@/components/DeliveryRatingModal";
 import { LagosLocation } from "@/data/lagos";
 import { usePins } from "@/hooks/usePins";
 import { useCustomCategories } from "@/hooks/useCustomCategories";
 import { hasVoted, recordVote } from "@/hooks/useVoteTracker";
+import { fetchRoute, RouteData } from "@/lib/routing";
 import { toast } from "sonner";
 
 const UPVOTE_THRESHOLD = 3;
+// Default rider position (Lagos center area)
+const RIDER_POSITION: [number, number] = [6.5244, 3.3792];
 
 const Index = () => {
   const { pins, loading, addPin, upvote, downvote } = usePins();
@@ -25,6 +30,13 @@ const Index = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [centerOn, setCenterOn] = useState<[number, number] | undefined>();
   const [isDark, setIsDark] = useState(() => !document.documentElement.classList.contains("light"));
+
+  // Navigation state
+  const [route, setRoute] = useState<RouteData | null>(null);
+  const [destinationMarker, setDestinationMarker] = useState<[number, number] | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [routeLoading, setRouteLoading] = useState(false);
 
   const handleThemeCheck = useCallback(() => {
     setIsDark(!document.documentElement.classList.contains("light"));
@@ -87,10 +99,57 @@ const Index = () => {
     await downvote(id);
   }, [downvote]);
 
-  const handleLocationSelect = useCallback((location: LagosLocation) => {
-    setCenterOn([location.lat, location.lng]);
+  const handleLocationSelect = useCallback(async (location: LagosLocation) => {
+    const dest: [number, number] = [location.lat, location.lng];
+    setDestinationMarker(dest);
+    setCenterOn(dest);
     setSelectedPin(null);
+    setRouteLoading(true);
+
+    // Try to get user's real location, fallback to Lagos center
+    let from = RIDER_POSITION;
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+      );
+      from = [pos.coords.latitude, pos.coords.longitude];
+    } catch {
+      // Use default
+    }
+
+    const routeData = await fetchRoute(from[0], from[1], dest[0], dest[1]);
+    setRouteLoading(false);
+
+    if (routeData) {
+      setRoute(routeData);
+      setIsNavigating(true);
+      toast.success("Route found!", {
+        description: `${(routeData.distance / 1000).toFixed(1)}km · ~${Math.round(routeData.duration / 60)} min ride`,
+      });
+    } else {
+      toast.error("Could not find route", { description: "Try a different address." });
+    }
   }, []);
+
+  const handleDeliveryComplete = () => {
+    setShowRatingModal(true);
+  };
+
+  const handleRatingSubmit = (rating: { addressAccuracy: number; routeAccuracy: number; comment: string }) => {
+    setShowRatingModal(false);
+    setRoute(null);
+    setDestinationMarker(null);
+    setIsNavigating(false);
+    toast.success("Thank you for your feedback! 🙏", {
+      description: `Address: ${rating.addressAccuracy}⭐ · Route: ${rating.routeAccuracy}⭐`,
+    });
+  };
+
+  const handleCancelNavigation = () => {
+    setRoute(null);
+    setDestinationMarker(null);
+    setIsNavigating(false);
+  };
 
   const handleStartAddPin = () => {
     setShowAddForm(true);
@@ -117,6 +176,8 @@ const Index = () => {
         centerOn={centerOn}
         customCategories={customCategories}
         isDark={isDark}
+        route={route}
+        destinationMarker={destinationMarker}
       />
 
       {/* Top Bar */}
@@ -128,7 +189,7 @@ const Index = () => {
               Ride<span className="text-primary">Sure</span>
             </span>
           </div>
-          <SearchBar onLocationSelect={handleLocationSelect} />
+          <SearchBar onLocationSelect={handleLocationSelect} isNavigating={isNavigating} />
           <ThemeToggle />
         </div>
 
@@ -142,6 +203,11 @@ const Index = () => {
       {/* Bottom Controls */}
       <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
         <div className="max-w-sm mx-auto space-y-3">
+          {/* Turn by turn directions */}
+          {isNavigating && route && !showAddForm && !currentSelectedPin && (
+            <TurnByTurn route={route} />
+          )}
+
           {currentSelectedPin && !showAddForm && (
             <PinDetail
               pin={currentSelectedPin}
@@ -176,26 +242,52 @@ const Index = () => {
               <Layers className="w-5 h-5 text-foreground" />
             </button>
 
-            <button
-              onClick={handleStartAddPin}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all ${
-                showAddForm
-                  ? "bg-primary text-primary-foreground glow-primary"
-                  : "glass-panel text-foreground hover:border-primary/20"
-              }`}
-            >
-              <Plus className="w-4 h-4" />
-              {showAddForm ? "Tap map to place" : "Drop a Pin"}
-            </button>
+            {isNavigating ? (
+              <>
+                <button
+                  onClick={handleDeliveryComplete}
+                  className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all bg-green-600 text-white hover:bg-green-700 shadow-lg"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Delivery Complete
+                </button>
+                <button
+                  onClick={handleCancelNavigation}
+                  className="glass-panel px-3 py-3 rounded-xl text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleStartAddPin}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all ${
+                  showAddForm
+                    ? "bg-primary text-primary-foreground glow-primary"
+                    : "glass-panel text-foreground hover:border-primary/20"
+                }`}
+              >
+                <Plus className="w-4 h-4" />
+                {showAddForm ? "Tap map to place" : "Drop a Pin"}
+              </button>
+            )}
 
             <div className="glass-panel px-3 py-3 rounded-xl">
               <span className="text-xs text-muted-foreground font-mono">
-                {loading ? "..." : `${pins.length} pins`}
+                {routeLoading ? "routing..." : loading ? "..." : `${pins.length} pins`}
               </span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Rating Modal */}
+      {showRatingModal && (
+        <DeliveryRatingModal
+          onSubmit={handleRatingSubmit}
+          onClose={() => setShowRatingModal(false)}
+        />
+      )}
     </div>
   );
 };

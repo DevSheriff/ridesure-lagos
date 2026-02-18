@@ -1,12 +1,13 @@
 import { useState, useMemo } from "react";
-import { Search, X, MapPin } from "lucide-react";
+import { Search, X, MapPin, Navigation2 } from "lucide-react";
 import { LAGOS_LOCATIONS, LagosLocation } from "@/data/lagos";
 
 interface SearchBarProps {
   onLocationSelect: (location: LagosLocation) => void;
+  isNavigating?: boolean;
 }
 
-const SearchBar = ({ onLocationSelect }: SearchBarProps) => {
+const SearchBar = ({ onLocationSelect, isNavigating }: SearchBarProps) => {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
@@ -22,11 +23,15 @@ const SearchBar = ({ onLocationSelect }: SearchBarProps) => {
 
   return (
     <div className="relative w-full max-w-md">
-      <div className="glass-panel flex items-center gap-2 px-4 py-3 rounded-xl">
-        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+      <div className={`glass-panel flex items-center gap-2 px-4 py-3 rounded-xl ${isNavigating ? "border-blue-500/40" : ""}`}>
+        {isNavigating ? (
+          <Navigation2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
+        ) : (
+          <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        )}
         <input
           type="text"
-          placeholder="Search Lagos addresses..."
+          placeholder="Which address are you delivering to?"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
