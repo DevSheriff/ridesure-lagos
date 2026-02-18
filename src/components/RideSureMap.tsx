@@ -1,9 +1,10 @@
 /* react-leaflet v4.2.1 — compatible with React 18 */
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { LAGOS_CENTER, DEFAULT_ZOOM, PIN_CATEGORIES, MapPin, CustomCategory } from "@/data/lagos";
 import { useEffect } from "react";
+import { RouteData } from "@/lib/routing";
 
 interface RideSureMapProps {
   pins: MapPin[];
@@ -14,6 +15,8 @@ interface RideSureMapProps {
   centerOn?: [number, number];
   customCategories: CustomCategory[];
   isDark: boolean;
+  route?: RouteData | null;
+  destinationMarker?: [number, number] | null;
 }
 
 function createPinIcon(category: string, allCategories: (typeof PIN_CATEGORIES[0])[]) {
@@ -38,6 +41,25 @@ function createPinIcon(category: string, allCategories: (typeof PIN_CATEGORIES[0
   });
 }
 
+function createDestinationIcon() {
+  return L.divIcon({
+    className: "custom-pin-icon",
+    html: `<div style="
+      width:36px;height:36px;
+      background:hsl(210, 100%, 55%);
+      border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      border:3px solid white;
+      box-shadow:0 2px 16px rgba(59,130,246,0.6);
+      font-size:18px;
+      animation: pulse 2s infinite;
+    ">📦</div>`,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18],
+  });
+}
+
 function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
   useMapEvents({
     click(e) {
@@ -57,7 +79,18 @@ function CenterHandler({ centerOn }: { centerOn?: [number, number] }) {
   return null;
 }
 
-const RideSureMap = ({ pins, onPinClick, onMapClick, selectedPin, filterCategories, centerOn, customCategories, isDark }: RideSureMapProps) => {
+function RouteFitHandler({ route }: { route?: RouteData | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (route && route.coordinates.length > 1) {
+      const bounds = L.latLngBounds(route.coordinates.map(c => L.latLng(c[0], c[1])));
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
+    }
+  }, [route, map]);
+  return null;
+}
+
+const RideSureMap = ({ pins, onPinClick, onMapClick, selectedPin, filterCategories, centerOn, customCategories, isDark, route, destinationMarker }: RideSureMapProps) => {
   const allCategories = [...PIN_CATEGORIES, ...customCategories];
   const filteredPins = pins.filter(
     (pin) => pin.active && (filterCategories.length === 0 || filterCategories.includes(pin.category))
@@ -80,6 +113,35 @@ const RideSureMap = ({ pins, onPinClick, onMapClick, selectedPin, filterCategori
       />
       <MapClickHandler onMapClick={onMapClick} />
       <CenterHandler centerOn={centerOn} />
+      <RouteFitHandler route={route} />
+
+      {/* Route polyline */}
+      {route && route.coordinates.length > 1 && (
+        <Polyline
+          positions={route.coordinates}
+          pathOptions={{
+            color: "hsl(210, 100%, 55%)",
+            weight: 5,
+            opacity: 0.85,
+            dashArray: undefined,
+            lineCap: "round",
+            lineJoin: "round",
+          }}
+        />
+      )}
+
+      {/* Destination marker */}
+      {destinationMarker && (
+        <Marker
+          position={destinationMarker}
+          icon={createDestinationIcon()}
+        >
+          <Popup>
+            <div className="text-sm font-semibold">📦 Delivery Destination</div>
+          </Popup>
+        </Marker>
+      )}
+
       {filteredPins.map((pin) => (
         <Marker
           key={pin.id}
