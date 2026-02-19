@@ -74,10 +74,10 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-full bg-background pb-24 overflow-y-auto">
+    <div className="h-full bg-background overflow-y-auto pb-20">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 py-4">
-        <div className="max-w-lg mx-auto flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
             <Navigation className="w-5 h-5 text-primary" />
           </div>
@@ -90,7 +90,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
+      <div className="px-4 pt-5 space-y-5">
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
           <Card className="bg-card/80 backdrop-blur border-border/50">
