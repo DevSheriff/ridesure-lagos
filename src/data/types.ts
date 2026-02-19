@@ -6,4 +6,4 @@ export interface PinCategory {
   description: string;
 }
 
-export type PinCategoryId = "roadblock" | "gate" | "badroad" | "speedbump" | "flooding" | "police";
+export type PinCategoryId = "roadblock" | "gate" | "badroad" | "speedbump" | "flooding" | "police" | "bike_entrance" | "extortion";
