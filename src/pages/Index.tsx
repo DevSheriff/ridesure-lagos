@@ -9,6 +9,8 @@ import ThemeToggle from "@/components/ThemeToggle";
 import TurnByTurn from "@/components/TurnByTurn";
 import DeliveryRatingModal from "@/components/DeliveryRatingModal";
 import QuickPinButton from "@/components/QuickPinButton";
+import BottomNav from "@/components/BottomNav";
+import Dashboard from "@/pages/Dashboard";
 import { LagosLocation } from "@/data/lagos";
 import { usePins } from "@/hooks/usePins";
 import { useCustomCategories } from "@/hooks/useCustomCategories";
@@ -22,6 +24,7 @@ const UPVOTE_THRESHOLD = 3;
 const RIDER_POSITION: [number, number] = [6.5244, 3.3792];
 
 const Index = () => {
+  const [activeTab, setActiveTab] = useState<"map" | "dashboard">("map");
   const { pins, loading, addPin, upvote, downvote } = usePins();
   const { customCategories, addCustomCategory } = useCustomCategories();
   const { scores: reliabilityScores, saveRating } = useReliabilityScores();
@@ -186,134 +189,143 @@ const Index = () => {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background" onClick={handleThemeCheck}>
-      <RideSureMap
-        pins={pins}
-        onPinClick={handlePinClick}
-        onMapClick={handleMapClick}
-        selectedPin={currentSelectedPin}
-        filterCategories={activeFilters}
-        centerOn={centerOn}
-        customCategories={customCategories}
-        isDark={isDark}
-        route={route}
-        destinationMarker={destinationMarker}
-        reliabilityScores={reliabilityScores}
-        showHeatmap={showHeatmap}
-      />
+      {activeTab === "map" ? (
+        <>
+          <RideSureMap
+            pins={pins}
+            onPinClick={handlePinClick}
+            onMapClick={handleMapClick}
+            selectedPin={currentSelectedPin}
+            filterCategories={activeFilters}
+            centerOn={centerOn}
+            customCategories={customCategories}
+            isDark={isDark}
+            route={route}
+            destinationMarker={destinationMarker}
+            reliabilityScores={reliabilityScores}
+            showHeatmap={showHeatmap}
+          />
 
-      {/* Quick Pin Floating Button */}
-      <QuickPinButton onQuickPin={handleQuickPin} />
+          {/* Quick Pin Floating Button */}
+          <QuickPinButton onQuickPin={handleQuickPin} />
 
-      {/* Top Bar */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-4">
-        <div className="flex items-center gap-3 max-w-2xl mx-auto">
-          <div className="glass-panel px-4 py-3 rounded-xl flex items-center gap-2 flex-shrink-0">
-            <Navigation className="w-5 h-5 text-primary" />
-            <span className="font-bold text-foreground text-sm tracking-tight">
-              Ride<span className="text-primary">Sure</span>
-            </span>
-          </div>
-          <SearchBar onLocationSelect={handleLocationSelect} isNavigating={isNavigating} />
-          <ThemeToggle />
-        </div>
+          {/* Top Bar */}
+          <div className="absolute top-0 left-0 right-0 z-10 p-4">
+            <div className="flex items-center gap-3 max-w-2xl mx-auto">
+              <div className="glass-panel px-4 py-3 rounded-xl flex items-center gap-2 flex-shrink-0">
+                <Navigation className="w-5 h-5 text-primary" />
+                <span className="font-bold text-foreground text-sm tracking-tight">
+                  Ride<span className="text-primary">Sure</span>
+                </span>
+              </div>
+              <SearchBar onLocationSelect={handleLocationSelect} isNavigating={isNavigating} />
+              <ThemeToggle />
+            </div>
 
-        {showFilters && (
-          <div className="mt-3 max-w-2xl mx-auto animate-slide-up">
-            <PinFilter activeFilters={activeFilters} onToggleFilter={handleToggleFilter} customCategories={customCategories} />
-          </div>
-        )}
-      </div>
-
-      {/* Bottom Controls */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
-        <div className="max-w-sm mx-auto space-y-3">
-          {/* Turn by turn directions */}
-          {isNavigating && route && !showAddForm && !currentSelectedPin && (
-            <TurnByTurn route={route} />
-          )}
-
-          {currentSelectedPin && !showAddForm && (
-            <PinDetail
-              pin={currentSelectedPin}
-              onClose={() => setSelectedPin(null)}
-              onUpvote={handleUpvote}
-              onDownvote={handleDownvote}
-              customCategories={customCategories}
-            />
-          )}
-
-          {showAddForm && addPinCoords && (
-            <AddPinForm
-              lat={addPinCoords.lat}
-              lng={addPinCoords.lng}
-              onSubmit={handleAddPin}
-              onCancel={() => {
-                setShowAddForm(false);
-                setAddPinCoords(null);
-              }}
-              customCategories={customCategories}
-              onAddCustomCategory={handleAddCustomCategory}
-            />
-          )}
-
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`glass-panel p-3 rounded-xl transition-all ${
-                showFilters ? "border-primary/40 glow-primary" : "hover:border-primary/20"
-              }`}
-            >
-              <Layers className="w-5 h-5 text-foreground" />
-            </button>
-
-            <button
-              onClick={() => setShowHeatmap(!showHeatmap)}
-              className={`glass-panel p-3 rounded-xl transition-all ${
-                showHeatmap ? "border-destructive/40 shadow-[0_0_12px_hsl(0,72%,55%/0.3)]" : "hover:border-destructive/20"
-              }`}
-              title="Toggle seizure heatmap"
-            >
-              <Flame className={`w-5 h-5 ${showHeatmap ? "text-destructive" : "text-foreground"}`} />
-            </button>
-
-            {isNavigating ? (
-              <>
-                <button
-                  onClick={handleDeliveryComplete}
-                  className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all bg-secondary text-secondary-foreground hover:opacity-90 shadow-lg"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  Delivery Complete
-                </button>
-                <button
-                  onClick={handleCancelNavigation}
-                  className="glass-panel px-3 py-3 rounded-xl text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={handleStartAddPin}
-                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all ${
-                  showAddForm
-                    ? "bg-primary text-primary-foreground glow-primary"
-                    : "glass-panel text-foreground hover:border-primary/20"
-                }`}
-              >
-                <Plus className="w-4 h-4" />
-                {showAddForm ? "Tap map to place" : "Drop a Pin"}
-              </button>
+            {showFilters && (
+              <div className="mt-3 max-w-2xl mx-auto animate-slide-up">
+                <PinFilter activeFilters={activeFilters} onToggleFilter={handleToggleFilter} customCategories={customCategories} />
+              </div>
             )}
+          </div>
 
-            <div className="glass-panel px-3 py-3 rounded-xl">
-              <span className="text-xs text-muted-foreground font-mono">
-                {routeLoading ? "routing..." : loading ? "..." : `${pins.length} pins`}
-              </span>
+          {/* Bottom Controls */}
+          <div className="absolute bottom-14 left-0 right-0 z-10 p-4">
+            <div className="max-w-sm mx-auto space-y-3">
+              {/* Turn by turn directions */}
+              {isNavigating && route && !showAddForm && !currentSelectedPin && (
+                <TurnByTurn route={route} />
+              )}
+
+              {currentSelectedPin && !showAddForm && (
+                <PinDetail
+                  pin={currentSelectedPin}
+                  onClose={() => setSelectedPin(null)}
+                  onUpvote={handleUpvote}
+                  onDownvote={handleDownvote}
+                  customCategories={customCategories}
+                />
+              )}
+
+              {showAddForm && addPinCoords && (
+                <AddPinForm
+                  lat={addPinCoords.lat}
+                  lng={addPinCoords.lng}
+                  onSubmit={handleAddPin}
+                  onCancel={() => {
+                    setShowAddForm(false);
+                    setAddPinCoords(null);
+                  }}
+                  customCategories={customCategories}
+                  onAddCustomCategory={handleAddCustomCategory}
+                />
+              )}
+
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`glass-panel p-3 rounded-xl transition-all ${
+                    showFilters ? "border-primary/40 glow-primary" : "hover:border-primary/20"
+                  }`}
+                >
+                  <Layers className="w-5 h-5 text-foreground" />
+                </button>
+
+                <button
+                  onClick={() => setShowHeatmap(!showHeatmap)}
+                  className={`glass-panel p-3 rounded-xl transition-all ${
+                    showHeatmap ? "border-destructive/40 shadow-[0_0_12px_hsl(0,72%,55%/0.3)]" : "hover:border-destructive/20"
+                  }`}
+                  title="Toggle seizure heatmap"
+                >
+                  <Flame className={`w-5 h-5 ${showHeatmap ? "text-destructive" : "text-foreground"}`} />
+                </button>
+
+                {isNavigating ? (
+                  <>
+                    <button
+                      onClick={handleDeliveryComplete}
+                      className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all bg-secondary text-secondary-foreground hover:opacity-90 shadow-lg"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Delivery Complete
+                    </button>
+                    <button
+                      onClick={handleCancelNavigation}
+                      className="glass-panel px-3 py-3 rounded-xl text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={handleStartAddPin}
+                    className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all ${
+                      showAddForm
+                        ? "bg-primary text-primary-foreground glow-primary"
+                        : "glass-panel text-foreground hover:border-primary/20"
+                    }`}
+                  >
+                    <Plus className="w-4 h-4" />
+                    {showAddForm ? "Tap map to place" : "Drop a Pin"}
+                  </button>
+                )}
+
+                <div className="glass-panel px-3 py-3 rounded-xl">
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {routeLoading ? "routing..." : loading ? "..." : `${pins.length} pins`}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      ) : (
+        <Dashboard />
+      )}
+
+      {/* Bottom Navigation */}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Rating Modal */}
       {showRatingModal && (
