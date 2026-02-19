@@ -4,8 +4,9 @@
 
 RideSure is a real-time, community-driven navigation and hazard-reporting web application built specifically for delivery riders in Lagos, Nigeria. Riders can crowdsource road intelligence — from police checkpoints and extortion zones to bad roads and flooded areas — helping each other navigate the city safely and efficiently.
 
-**Live App**: [RideSure on Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID)  
-**GitHub Repository**: [github.com/YOUR_USERNAME/YOUR_REPO_NAME](https://github.com/YOUR_USERNAME/YOUR_REPO_NAME)
+**Live App**: https://lovable.dev/projects/37dfb9ad-17b3-4172-ada0-6af1819bd088 
+
+**GitHub Repository**: https://github.com/DevSheriff/ridesure-lagos
 
 ---
 
