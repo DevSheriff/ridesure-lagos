@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Plus, Navigation, Layers, CheckCircle } from "lucide-react";
+import { Plus, Navigation, Layers, CheckCircle, Flame } from "lucide-react";
 import RideSureMap from "@/components/RideSureMap";
 import SearchBar from "@/components/SearchBar";
 import PinFilter from "@/components/PinFilter";
@@ -8,9 +8,11 @@ import AddPinForm from "@/components/AddPinForm";
 import ThemeToggle from "@/components/ThemeToggle";
 import TurnByTurn from "@/components/TurnByTurn";
 import DeliveryRatingModal from "@/components/DeliveryRatingModal";
+import QuickPinButton from "@/components/QuickPinButton";
 import { LagosLocation } from "@/data/lagos";
 import { usePins } from "@/hooks/usePins";
 import { useCustomCategories } from "@/hooks/useCustomCategories";
+import { useReliabilityScores } from "@/hooks/useReliabilityScores";
 import { hasVoted, recordVote } from "@/hooks/useVoteTracker";
 import { fetchRoute, RouteData } from "@/lib/routing";
 import { toast } from "sonner";
@@ -22,6 +24,7 @@ const RIDER_POSITION: [number, number] = [6.5244, 3.3792];
 const Index = () => {
   const { pins, loading, addPin, upvote, downvote } = usePins();
   const { customCategories, addCustomCategory } = useCustomCategories();
+  const { scores: reliabilityScores, saveRating } = useReliabilityScores();
 
   const [selectedPin, setSelectedPin] = useState<typeof pins[0] | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
@@ -30,6 +33,7 @@ const Index = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [centerOn, setCenterOn] = useState<[number, number] | undefined>();
   const [isDark, setIsDark] = useState(() => !document.documentElement.classList.contains("light"));
+  const [showHeatmap, setShowHeatmap] = useState(false);
 
   // Navigation state
   const [route, setRoute] = useState<RouteData | null>(null);
@@ -135,8 +139,11 @@ const Index = () => {
     setShowRatingModal(true);
   };
 
-  const handleRatingSubmit = (rating: { addressAccuracy: number; routeAccuracy: number; comment: string }) => {
+  const handleRatingSubmit = async (rating: { addressAccuracy: number; routeAccuracy: number; comment: string }) => {
     setShowRatingModal(false);
+    if (destinationMarker) {
+      await saveRating(destinationMarker[0], destinationMarker[1], rating.addressAccuracy, rating.routeAccuracy, rating.comment);
+    }
     setRoute(null);
     setDestinationMarker(null);
     setIsNavigating(false);
@@ -144,6 +151,18 @@ const Index = () => {
       description: `Address: ${rating.addressAccuracy}⭐ · Route: ${rating.routeAccuracy}⭐`,
     });
   };
+
+  const handleQuickPin = useCallback(async (lat: number, lng: number) => {
+    return await addPin({
+      category: "extortion",
+      title: "⚠️ Extortion Zone",
+      description: "Rider-reported extortion or illegal checkpoint at this location. Be alert!",
+      reportedBy: "QuickReport",
+      lat,
+      lng,
+      permanent: false,
+    });
+  }, [addPin]);
 
   const handleCancelNavigation = () => {
     setRoute(null);
@@ -178,7 +197,12 @@ const Index = () => {
         isDark={isDark}
         route={route}
         destinationMarker={destinationMarker}
+        reliabilityScores={reliabilityScores}
+        showHeatmap={showHeatmap}
       />
+
+      {/* Quick Pin Floating Button */}
+      <QuickPinButton onQuickPin={handleQuickPin} />
 
       {/* Top Bar */}
       <div className="absolute top-0 left-0 right-0 z-10 p-4">
@@ -242,11 +266,21 @@ const Index = () => {
               <Layers className="w-5 h-5 text-foreground" />
             </button>
 
+            <button
+              onClick={() => setShowHeatmap(!showHeatmap)}
+              className={`glass-panel p-3 rounded-xl transition-all ${
+                showHeatmap ? "border-destructive/40 shadow-[0_0_12px_hsl(0,72%,55%/0.3)]" : "hover:border-destructive/20"
+              }`}
+              title="Toggle seizure heatmap"
+            >
+              <Flame className={`w-5 h-5 ${showHeatmap ? "text-destructive" : "text-foreground"}`} />
+            </button>
+
             {isNavigating ? (
               <>
                 <button
                   onClick={handleDeliveryComplete}
-                  className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all bg-green-600 text-white hover:bg-green-700 shadow-lg"
+                  className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all bg-secondary text-secondary-foreground hover:opacity-90 shadow-lg"
                 >
                   <CheckCircle className="w-4 h-4" />
                   Delivery Complete

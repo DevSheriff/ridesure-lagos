@@ -1,10 +1,12 @@
 /* react-leaflet v4.2.1 — compatible with React 18 */
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents, useMap, CircleMarker, Tooltip } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { LAGOS_CENTER, DEFAULT_ZOOM, PIN_CATEGORIES, MapPin, CustomCategory } from "@/data/lagos";
 import { useEffect } from "react";
 import { RouteData } from "@/lib/routing";
+import { ReliabilityScore } from "@/hooks/useReliabilityScores";
+import HeatmapOverlay from "@/components/HeatmapOverlay";
 
 interface RideSureMapProps {
   pins: MapPin[];
@@ -17,6 +19,8 @@ interface RideSureMapProps {
   isDark: boolean;
   route?: RouteData | null;
   destinationMarker?: [number, number] | null;
+  reliabilityScores?: ReliabilityScore[];
+  showHeatmap?: boolean;
 }
 
 function createPinIcon(category: string, allCategories: (typeof PIN_CATEGORIES[0])[]) {
@@ -90,7 +94,7 @@ function RouteFitHandler({ route }: { route?: RouteData | null }) {
   return null;
 }
 
-const RideSureMap = ({ pins, onPinClick, onMapClick, selectedPin, filterCategories, centerOn, customCategories, isDark, route, destinationMarker }: RideSureMapProps) => {
+const RideSureMap = ({ pins, onPinClick, onMapClick, selectedPin, filterCategories, centerOn, customCategories, isDark, route, destinationMarker, reliabilityScores, showHeatmap }: RideSureMapProps) => {
   const allCategories = [...PIN_CATEGORIES, ...customCategories];
   const filteredPins = pins.filter(
     (pin) => pin.active && (filterCategories.length === 0 || filterCategories.includes(pin.category))
@@ -114,6 +118,7 @@ const RideSureMap = ({ pins, onPinClick, onMapClick, selectedPin, filterCategori
       <MapClickHandler onMapClick={onMapClick} />
       <CenterHandler centerOn={centerOn} />
       <RouteFitHandler route={route} />
+      <HeatmapOverlay pins={pins} enabled={!!showHeatmap} />
 
       {/* Route polyline */}
       {route && route.coordinates.length > 1 && (
@@ -141,6 +146,25 @@ const RideSureMap = ({ pins, onPinClick, onMapClick, selectedPin, filterCategori
           </Popup>
         </Marker>
       )}
+
+      {/* Reliability score markers */}
+      {reliabilityScores && reliabilityScores.map((rs, i) => (
+        <CircleMarker
+          key={`rel-${i}`}
+          center={[rs.lat, rs.lng]}
+          radius={14}
+          pathOptions={{
+            color: rs.score >= 70 ? "hsl(150, 60%, 45%)" : rs.score >= 40 ? "hsl(45, 100%, 55%)" : "hsl(0, 72%, 55%)",
+            fillColor: rs.score >= 70 ? "hsl(150, 60%, 45%)" : rs.score >= 40 ? "hsl(45, 100%, 55%)" : "hsl(0, 72%, 55%)",
+            fillOpacity: 0.85,
+            weight: 2,
+          }}
+        >
+          <Tooltip permanent direction="center" className="reliability-tooltip">
+            <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff" }}>{rs.score}%</span>
+          </Tooltip>
+        </CircleMarker>
+      ))}
 
       {filteredPins.map((pin) => (
         <Marker
