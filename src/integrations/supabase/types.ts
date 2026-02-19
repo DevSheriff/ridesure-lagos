@@ -38,6 +38,36 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_ratings: {
+        Row: {
+          address_accuracy: number
+          comment: string | null
+          created_at: string
+          destination_lat: number
+          destination_lng: number
+          id: string
+          route_accuracy: number
+        }
+        Insert: {
+          address_accuracy: number
+          comment?: string | null
+          created_at?: string
+          destination_lat: number
+          destination_lng: number
+          id?: string
+          route_accuracy: number
+        }
+        Update: {
+          address_accuracy?: number
+          comment?: string | null
+          created_at?: string
+          destination_lat?: number
+          destination_lng?: number
+          id?: string
+          route_accuracy?: number
+        }
+        Relationships: []
+      }
       pins: {
         Row: {
           active: boolean

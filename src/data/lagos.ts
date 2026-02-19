@@ -47,6 +47,20 @@ export const PIN_CATEGORIES: PinCategory[] = [
     color: "hsl(150, 60%, 45%)",
     description: "LASTMA, police, or VIO checkpoint",
   },
+  {
+    id: "bike_entrance",
+    label: "Bike Entrance",
+    icon: "🏍️",
+    color: "hsl(180, 70%, 45%)",
+    description: "Bike/okada-only entrance — skip car-gate queues",
+  },
+  {
+    id: "extortion",
+    label: "Extortion Zone",
+    icon: "🚨",
+    color: "hsl(350, 80%, 50%)",
+    description: "Area known for illegal collections or harassment",
+  },
 ];
 
 export interface LagosLocation {
