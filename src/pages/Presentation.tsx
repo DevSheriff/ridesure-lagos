@@ -111,7 +111,7 @@ const slides = [
     color: "hsl(45, 100%, 55%)",
     description: "Every pin can be upvoted or downvoted. If a temporary pin gets 3+ upvotes within 24 hours, it becomes permanent. The community validates which hazards are real.",
     highlights: ["Upvote to confirm a hazard is real", "Downvote if it's no longer there", "3+ upvotes promote temporary → permanent", "Each device can only vote once per pin"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/10-pindetail.jpg",
   },
   {
     type: "feature" as const,
