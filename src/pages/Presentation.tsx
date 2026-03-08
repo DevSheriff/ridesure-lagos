@@ -91,7 +91,7 @@ const slides = [
     color: "hsl(15, 90%, 55%)",
     description: "The heatmap highlights danger zones by clustering high-frequency hazard reports. Areas with many reports glow red, helping riders avoid dangerous neighborhoods.",
     highlights: ["Clusters reports to show high-risk zones", "Color intensity shows danger level", "Toggle on/off with the flame button", "Focuses on extortion and road blocks"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/08-heatmap.jpg",
   },
   {
     type: "feature" as const,
