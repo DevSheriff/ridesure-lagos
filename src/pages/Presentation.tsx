@@ -312,6 +312,9 @@ function TitleSlide({ slide }: { slide: (typeof slides)[0] }) {
 
 function FeatureSlide({ slide }: { slide: (typeof slides)[number] }) {
   if (slide.type !== "feature") return null;
+  const hasLiveEmbed = "liveEmbed" in slide && slide.liveEmbed;
+  const hasScreenshot = "screenshot" in slide && slide.screenshot;
+
   return (
     <div className="grid md:grid-cols-2 gap-8 items-center h-full">
       {/* Left — text */}
@@ -334,9 +337,9 @@ function FeatureSlide({ slide }: { slide: (typeof slides)[number] }) {
         </div>
       </div>
 
-      {/* Right — actual app screenshot */}
+      {/* Right — live app embed or screenshot */}
       <div className="relative flex items-center justify-center">
-        <div className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl w-full max-h-[480px]">
+        <div className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl w-full" style={{ maxHeight: "480px" }}>
           <div className="bg-white/5 px-4 py-2 border-b border-white/10 flex items-center gap-2">
             <div className="flex gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-[hsl(0,60%,50%)]/60" />
@@ -345,12 +348,30 @@ function FeatureSlide({ slide }: { slide: (typeof slides)[number] }) {
             </div>
             <div className="flex-1 text-center text-[10px] text-white/30 font-mono">ride-sure.lovable.app</div>
           </div>
-          <img
-            src={slide.screenshot}
-            alt={`Screenshot of ${slide.title}`}
-            className="w-full object-cover object-top"
-            style={{ maxHeight: "440px" }}
-          />
+          {hasLiveEmbed ? (
+            <div className="relative" style={{ height: "440px" }}>
+              <iframe
+                src={`${LIVE_APP_URL}${(slide as any).liveEmbed.path}`}
+                className="w-full h-full border-0"
+                title={`Live preview of ${slide.title}`}
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin"
+              />
+              {(slide as any).liveEmbed.note && (
+                <div className="absolute bottom-3 left-3 right-3 bg-black/70 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-white/80 flex items-center gap-2">
+                  <span className="text-[hsl(25,95%,53%)]">💡</span>
+                  <span>{(slide as any).liveEmbed.note}</span>
+                </div>
+              )}
+            </div>
+          ) : hasScreenshot ? (
+            <img
+              src={(slide as any).screenshot}
+              alt={`Screenshot of ${slide.title}`}
+              className="w-full object-cover object-top"
+              style={{ maxHeight: "440px" }}
+            />
+          ) : null}
         </div>
       </div>
     </div>
