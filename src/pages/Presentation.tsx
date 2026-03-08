@@ -51,7 +51,7 @@ const slides = [
     color: "hsl(280, 65%, 55%)",
     description: "The filter bar lets riders show only the hazard types they care about. Tap a category pill to toggle it — the map updates instantly.",
     highlights: ["Tap the layers icon to open the filter bar", "Select one or multiple categories", "Map updates in real-time as you toggle", "Includes custom categories too"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/03-filters.jpg",
   },
   {
     type: "feature" as const,
