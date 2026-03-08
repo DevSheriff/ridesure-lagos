@@ -181,7 +181,7 @@ const slides = [
     color: "hsl(320, 70%, 55%)",
     description: "Riders can create entirely new hazard categories if the built-in ones don't fit. Choose a name, emoji, color, and description — the new type appears for everyone.",
     highlights: ["Tap '+ New Type' in the pin form", "Pick any emoji, color, name, description", "New categories sync to all users", "Shows in filters, markers, and dashboard"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/04-pin-form.jpg",
   },
   {
     type: "feature" as const,
