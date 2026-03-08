@@ -71,7 +71,7 @@ const slides = [
     color: "hsl(200, 80%, 50%)",
     description: "Type a destination and get instant results. 30+ popular Lagos landmarks are pre-loaded, and for anything else the app searches real addresses online. Pick a result and the bike route is planned automatically.",
     highlights: ["30+ pre-loaded Lagos locations", "Live address search for any location", "Results grouped into 'Known' and 'Addresses'", "Selecting a result plans your bike route"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/05-search.jpg",
   },
   {
     type: "feature" as const,
