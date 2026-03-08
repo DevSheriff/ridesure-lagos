@@ -81,7 +81,7 @@ const slides = [
     color: "hsl(210, 100%, 55%)",
     description: "After picking a destination, a blue route line is drawn on the map optimized for bikes. A directions panel shows step-by-step turns with distances and estimated ride time.",
     highlights: ["Blue route line from your area to destination", "Step-by-step turn directions with distances", "Total distance and estimated ride time", "'Delivery Complete' button to finish and rate"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/06-route.jpg",
   },
   {
     type: "feature" as const,
