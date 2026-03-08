@@ -61,7 +61,7 @@ const slides = [
     color: "hsl(150, 60%, 45%)",
     description: "Two easy steps: tap the map to mark the spot, then fill a quick form — pick the hazard type, choose temporary or permanent, add a title and description.",
     highlights: ["Tap anywhere on the map to set location", "Pick from a visual grid of hazard types", "Choose 'Temporary' (24h) or 'Permanent'", "Option to create a brand new hazard type"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/04-pin-form.jpg",
   },
   {
     type: "feature" as const,
