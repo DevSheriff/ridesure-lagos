@@ -121,7 +121,7 @@ const slides = [
     color: "hsl(150, 60%, 45%)",
     description: "After completing a delivery, riders rate address accuracy and route quality. Ratings show as colored circles on the map — green means reliable, yellow is okay, red means unreliable.",
     highlights: ["Rate address accuracy 1-5 stars", "Rate route quality 1-5 stars", "Optional comment about the delivery", "Green / Yellow / Red circles on map"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/12-rating.jpg",
   },
   {
     type: "feature" as const,
