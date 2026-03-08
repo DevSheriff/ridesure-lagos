@@ -141,7 +141,7 @@ const slides = [
     color: "hsl(0, 60%, 50%)",
     description: "From the Dashboard, riders can delete pins they no longer need. Tap the trash icon and it's removed from the map and database instantly.",
     highlights: ["Trash icon next to each pin in the list", "Pin removed from map immediately", "Confirmation message after deletion", "Syncs across all users in real-time"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/07-dashboard.jpg",
   },
   {
     type: "feature" as const,
