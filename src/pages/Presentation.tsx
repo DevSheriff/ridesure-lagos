@@ -151,7 +151,7 @@ const slides = [
     color: "hsl(260, 50%, 55%)",
     description: "Switch between dark and light themes with one tap. The map tiles, colors, and entire UI adapt. Dark mode is easier on the eyes for night rides.",
     highlights: ["Sun/Moon toggle in the top-right corner", "Map tiles switch between dark and light", "All UI elements adapt to the theme", "Great for night riding or bright sunlight"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/09-darklight.jpg",
   },
   {
     type: "feature" as const,
