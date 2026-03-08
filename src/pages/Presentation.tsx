@@ -41,7 +41,7 @@ const slides = [
     color: "hsl(0, 72%, 55%)",
     description: "8 built-in hazard types that Lagos riders face daily — from road blocks and bad roads to extortion zones and flooding. Each has a unique icon and color.",
     highlights: ["🚧 Road Block — Checkpoints", "🚪 Estate Gate — Gated entrances", "⚠️ Bad Road — Potholes & damage", "🚨 Extortion Zone — Illegal collection spots", "🌊 Flooding — Waterlogged streets", "👮 Police/LASTMA — Officer stops"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/03-filters.jpg",
   },
   {
     type: "feature" as const,
