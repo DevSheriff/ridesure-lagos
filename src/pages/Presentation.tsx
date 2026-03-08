@@ -171,7 +171,7 @@ const slides = [
     color: "hsl(30, 80%, 55%)",
     description: "Temporary pins disappear after 24 hours unless other riders upvote them. This keeps the map clean and ensures only verified hazards stay visible.",
     highlights: ["Temporary pins last 24 hours", "3+ upvotes make it permanent", "Expired pins removed automatically", "Keeps the map accurate and clean"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/10-pindetail.jpg",
   },
   {
     type: "feature" as const,
