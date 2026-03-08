@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Maximize, Minimize, Grid3X3, Navigation } from "lucide-react";
 
+const LIVE_APP_URL = "https://ride-sure.lovable.app";
+
 const slides = [
   {
     type: "title" as const,
@@ -21,7 +23,7 @@ const slides = [
     color: "hsl(25, 95%, 53%)",
     description: "When you open the app, you see the RideSure logo, tagline, and a smooth loading bar. It fades away after about 2 seconds while the map loads in the background.",
     highlights: ["Smooth fade-in animation with the logo and tagline", "Loading progress bar shows the app is getting ready", "Automatically transitions to the main map screen"],
-    screenshot: "/screenshots/01-splash.jpg",
+    liveEmbed: { path: "/", note: "The splash screen plays on first load" },
   },
   {
     type: "feature" as const,
@@ -31,7 +33,7 @@ const slides = [
     color: "hsl(210, 100%, 55%)",
     description: "A full-screen map centered on Lagos shows all reported hazards as colorful pin markers. Each color and emoji represents a different hazard type so riders can spot dangers at a glance.",
     highlights: ["Full-screen map covering all of Lagos", "Color-coded markers for each hazard type", "Tap any marker for details, tap the map to report"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/02-map.png",
   },
   {
     type: "feature" as const,
@@ -41,7 +43,7 @@ const slides = [
     color: "hsl(0, 72%, 55%)",
     description: "8 built-in hazard types that Lagos riders face daily — from road blocks and bad roads to extortion zones and flooding. Each has a unique icon and color.",
     highlights: ["🚧 Road Block — Checkpoints", "🚪 Estate Gate — Gated entrances", "⚠️ Bad Road — Potholes & damage", "🚨 Extortion Zone — Illegal collection spots", "🌊 Flooding — Waterlogged streets", "👮 Police/LASTMA — Officer stops"],
-    screenshot: "/screenshots/03-filters.jpg",
+    liveEmbed: { path: "/", note: "Tap the layers icon ≡ to see all categories" },
   },
   {
     type: "feature" as const,
@@ -51,7 +53,7 @@ const slides = [
     color: "hsl(280, 65%, 55%)",
     description: "The filter bar lets riders show only the hazard types they care about. Tap a category pill to toggle it — the map updates instantly.",
     highlights: ["Tap the layers icon to open the filter bar", "Select one or multiple categories", "Map updates in real-time as you toggle", "Includes custom categories too"],
-    screenshot: "/screenshots/03-filters.jpg",
+    liveEmbed: { path: "/", note: "Try clicking the layers icon to filter hazards" },
   },
   {
     type: "feature" as const,
@@ -61,7 +63,7 @@ const slides = [
     color: "hsl(150, 60%, 45%)",
     description: "Two easy steps: tap the map to mark the spot, then fill a quick form — pick the hazard type, choose temporary or permanent, add a title and description.",
     highlights: ["Tap anywhere on the map to set location", "Pick from a visual grid of hazard types", "Choose 'Temporary' (24h) or 'Permanent'", "Option to create a brand new hazard type"],
-    screenshot: "/screenshots/04-pin-form.jpg",
+    liveEmbed: { path: "/", note: "Click 'Drop a Pin' then tap the map" },
   },
   {
     type: "feature" as const,
@@ -71,7 +73,7 @@ const slides = [
     color: "hsl(200, 80%, 50%)",
     description: "Type a destination and get instant results. 30+ popular Lagos landmarks are pre-loaded, and for anything else the app searches real addresses online. Pick a result and the bike route is planned automatically.",
     highlights: ["30+ pre-loaded Lagos locations", "Live address search for any location", "Results grouped into 'Known' and 'Addresses'", "Selecting a result plans your bike route"],
-    screenshot: "/screenshots/05-search.jpg",
+    liveEmbed: { path: "/", note: "Try searching 'Lekki' in the search bar" },
   },
   {
     type: "feature" as const,
@@ -81,7 +83,7 @@ const slides = [
     color: "hsl(210, 100%, 55%)",
     description: "After picking a destination, a blue route line is drawn on the map optimized for bikes. A directions panel shows step-by-step turns with distances and estimated ride time.",
     highlights: ["Blue route line from your area to destination", "Step-by-step turn directions with distances", "Total distance and estimated ride time", "'Delivery Complete' button to finish and rate"],
-    screenshot: "/screenshots/06-route.jpg",
+    liveEmbed: { path: "/", note: "Search a location and select it to see routing" },
   },
   {
     type: "feature" as const,
@@ -91,7 +93,7 @@ const slides = [
     color: "hsl(15, 90%, 55%)",
     description: "The heatmap highlights danger zones by clustering high-frequency hazard reports. Areas with many reports glow red, helping riders avoid dangerous neighborhoods.",
     highlights: ["Clusters reports to show high-risk zones", "Color intensity shows danger level", "Toggle on/off with the flame button", "Focuses on extortion and road blocks"],
-    screenshot: "/screenshots/08-heatmap.jpg",
+    liveEmbed: { path: "/", note: "Tap the flame 🔥 icon to toggle heatmap" },
   },
   {
     type: "feature" as const,
@@ -101,7 +103,7 @@ const slides = [
     color: "hsl(0, 85%, 50%)",
     description: "The floating red button is for emergencies. If a rider encounters extortion, one tap instantly reports it using GPS — no forms, no typing, no delay.",
     highlights: ["Floating red warning button always visible", "Uses phone GPS for exact location", "Creates an 'Extortion Zone' pin automatically", "Alerts all nearby riders immediately"],
-    screenshot: "/screenshots/11-quickalert.jpg",
+    liveEmbed: { path: "/", note: "See the red ⚠️ button on the right side" },
   },
   {
     type: "feature" as const,
@@ -111,7 +113,7 @@ const slides = [
     color: "hsl(45, 100%, 55%)",
     description: "Every pin can be upvoted or downvoted. If a temporary pin gets 3+ upvotes within 24 hours, it becomes permanent. The community validates which hazards are real.",
     highlights: ["Upvote to confirm a hazard is real", "Downvote if it's no longer there", "3+ upvotes promote temporary → permanent", "Each device can only vote once per pin"],
-    screenshot: "/screenshots/10-pindetail.jpg",
+    liveEmbed: { path: "/", note: "Click any pin marker to see voting" },
   },
   {
     type: "feature" as const,
@@ -121,7 +123,7 @@ const slides = [
     color: "hsl(150, 60%, 45%)",
     description: "After completing a delivery, riders rate address accuracy and route quality. Ratings show as colored circles on the map — green means reliable, yellow is okay, red means unreliable.",
     highlights: ["Rate address accuracy 1-5 stars", "Rate route quality 1-5 stars", "Optional comment about the delivery", "Green / Yellow / Red circles on map"],
-    screenshot: "/screenshots/12-rating.jpg",
+    liveEmbed: { path: "/", note: "Complete a route to see the rating modal" },
   },
   {
     type: "feature" as const,
@@ -131,7 +133,7 @@ const slides = [
     color: "hsl(250, 65%, 55%)",
     description: "The Dashboard gives a bird's-eye view of all contributions — total pins, upvotes, permanent vs active, the most-reported category, and a filterable list of all pins.",
     highlights: ["4 stat cards: Total Pins, Upvotes, Permanent, Active", "Top Category badge for most-reported type", "Filter pins: All, Active, or Permanent", "Time stamps and delete option per pin"],
-    screenshot: "/screenshots/07-dashboard.jpg",
+    liveEmbed: { path: "/", note: "Tap 'Dashboard' in the bottom nav" },
   },
   {
     type: "feature" as const,
@@ -141,7 +143,7 @@ const slides = [
     color: "hsl(0, 60%, 50%)",
     description: "From the Dashboard, riders can delete pins they no longer need. Tap the trash icon and it's removed from the map and database instantly.",
     highlights: ["Trash icon next to each pin in the list", "Pin removed from map immediately", "Confirmation message after deletion", "Syncs across all users in real-time"],
-    screenshot: "/screenshots/07-dashboard.jpg",
+    liveEmbed: { path: "/", note: "Open Dashboard to manage pins" },
   },
   {
     type: "feature" as const,
@@ -151,7 +153,7 @@ const slides = [
     color: "hsl(260, 50%, 55%)",
     description: "Switch between dark and light themes with one tap. The map tiles, colors, and entire UI adapt. Dark mode is easier on the eyes for night rides.",
     highlights: ["Sun/Moon toggle in the top-right corner", "Map tiles switch between dark and light", "All UI elements adapt to the theme", "Great for night riding or bright sunlight"],
-    screenshot: "/screenshots/09-darklight.jpg",
+    liveEmbed: { path: "/", note: "Try the ☀️/🌙 toggle in the top-right" },
   },
   {
     type: "feature" as const,
@@ -161,7 +163,7 @@ const slides = [
     color: "hsl(200, 70%, 50%)",
     description: "Simple two-tab navigation at the bottom: Map and Dashboard. Designed for one-handed phone use, easy to switch views while on the go.",
     highlights: ["Two tabs: Map and Dashboard", "Active tab highlighted with brand color", "Always visible at screen bottom", "Thumb-friendly for mobile use"],
-    screenshot: "/screenshots/map-overview.png",
+    liveEmbed: { path: "/", note: "See the Map and Dashboard tabs at the bottom" },
   },
   {
     type: "feature" as const,
@@ -171,7 +173,7 @@ const slides = [
     color: "hsl(30, 80%, 55%)",
     description: "Temporary pins disappear after 24 hours unless other riders upvote them. This keeps the map clean and ensures only verified hazards stay visible.",
     highlights: ["Temporary pins last 24 hours", "3+ upvotes make it permanent", "Expired pins removed automatically", "Keeps the map accurate and clean"],
-    screenshot: "/screenshots/10-pindetail.jpg",
+    liveEmbed: { path: "/", note: "Click any pin to see its status" },
   },
   {
     type: "feature" as const,
@@ -181,7 +183,7 @@ const slides = [
     color: "hsl(320, 70%, 55%)",
     description: "Riders can create entirely new hazard categories if the built-in ones don't fit. Choose a name, emoji, color, and description — the new type appears for everyone.",
     highlights: ["Tap '+ New Type' in the pin form", "Pick any emoji, color, name, description", "New categories sync to all users", "Shows in filters, markers, and dashboard"],
-    screenshot: "/screenshots/04-pin-form.jpg",
+    liveEmbed: { path: "/", note: "Open 'Drop a Pin' and scroll to '+ New Type'" },
   },
   {
     type: "feature" as const,
@@ -191,7 +193,7 @@ const slides = [
     color: "hsl(170, 60%, 45%)",
     description: "Everything syncs in real-time across all riders. When someone drops a pin, votes, or rates a delivery, every user sees the update immediately.",
     highlights: ["All pins sync instantly across users", "Votes and ratings update live", "Cloud database with live subscriptions", "Works on slow connections with smart caching"],
-    screenshot: "/screenshots/map-overview.png",
+    liveEmbed: { path: "/", note: "Open in two tabs to see live sync" },
   },
   {
     type: "closing" as const,
@@ -310,6 +312,9 @@ function TitleSlide({ slide }: { slide: (typeof slides)[0] }) {
 
 function FeatureSlide({ slide }: { slide: (typeof slides)[number] }) {
   if (slide.type !== "feature") return null;
+  const hasLiveEmbed = "liveEmbed" in slide && slide.liveEmbed;
+  const hasScreenshot = "screenshot" in slide && slide.screenshot;
+
   return (
     <div className="grid md:grid-cols-2 gap-8 items-center h-full">
       {/* Left — text */}
@@ -332,9 +337,9 @@ function FeatureSlide({ slide }: { slide: (typeof slides)[number] }) {
         </div>
       </div>
 
-      {/* Right — actual app screenshot */}
+      {/* Right — live app embed or screenshot */}
       <div className="relative flex items-center justify-center">
-        <div className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl w-full max-h-[480px]">
+        <div className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl w-full" style={{ maxHeight: "480px" }}>
           <div className="bg-white/5 px-4 py-2 border-b border-white/10 flex items-center gap-2">
             <div className="flex gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-[hsl(0,60%,50%)]/60" />
@@ -343,12 +348,30 @@ function FeatureSlide({ slide }: { slide: (typeof slides)[number] }) {
             </div>
             <div className="flex-1 text-center text-[10px] text-white/30 font-mono">ride-sure.lovable.app</div>
           </div>
-          <img
-            src={slide.screenshot}
-            alt={`Screenshot of ${slide.title}`}
-            className="w-full object-cover object-top"
-            style={{ maxHeight: "440px" }}
-          />
+          {hasLiveEmbed ? (
+            <div className="relative" style={{ height: "440px" }}>
+              <iframe
+                src={`${LIVE_APP_URL}${(slide as any).liveEmbed.path}`}
+                className="w-full h-full border-0"
+                title={`Live preview of ${slide.title}`}
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin"
+              />
+              {(slide as any).liveEmbed.note && (
+                <div className="absolute bottom-3 left-3 right-3 bg-black/70 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-white/80 flex items-center gap-2">
+                  <span className="text-[hsl(25,95%,53%)]">💡</span>
+                  <span>{(slide as any).liveEmbed.note}</span>
+                </div>
+              )}
+            </div>
+          ) : hasScreenshot ? (
+            <img
+              src={(slide as any).screenshot}
+              alt={`Screenshot of ${slide.title}`}
+              className="w-full object-cover object-top"
+              style={{ maxHeight: "440px" }}
+            />
+          ) : null}
         </div>
       </div>
     </div>
