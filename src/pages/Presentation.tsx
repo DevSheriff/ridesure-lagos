@@ -131,7 +131,7 @@ const slides = [
     color: "hsl(250, 65%, 55%)",
     description: "The Dashboard gives a bird's-eye view of all contributions — total pins, upvotes, permanent vs active, the most-reported category, and a filterable list of all pins.",
     highlights: ["4 stat cards: Total Pins, Upvotes, Permanent, Active", "Top Category badge for most-reported type", "Filter pins: All, Active, or Permanent", "Time stamps and delete option per pin"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/07-dashboard.jpg",
   },
   {
     type: "feature" as const,
