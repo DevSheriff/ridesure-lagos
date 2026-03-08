@@ -101,7 +101,7 @@ const slides = [
     color: "hsl(0, 85%, 50%)",
     description: "The floating red button is for emergencies. If a rider encounters extortion, one tap instantly reports it using GPS — no forms, no typing, no delay.",
     highlights: ["Floating red warning button always visible", "Uses phone GPS for exact location", "Creates an 'Extortion Zone' pin automatically", "Alerts all nearby riders immediately"],
-    screenshot: "/screenshots/map-overview.png",
+    screenshot: "/screenshots/11-quickalert.jpg",
   },
   {
     type: "feature" as const,
